@@ -6,8 +6,8 @@
 (define (add key value table)
   (hash-set table key value))
 
-(define (change key f table)
-  (hash-update table key f))
+(define (change key value table)
+  (hash-set table key value))
 
 (define (contains-key key table)
   (hash-has-key? table key))
@@ -20,6 +20,12 @@
 
 (define (exists predicate table)
   (> (count (filter predicate table)) 0))
+
+(define (get key table)
+  (hash-ref table key))
+
+(define (keys table)
+  (hash-keys table))
 
 (define (map mapping table)
   (hash-map/copy table mapping))
@@ -45,6 +51,9 @@
 (define (to-array table)
   (List.to-array (hash-map table (fn (key value) (list key value)))))
 
+(define (get-values table)
+  (hash-values table))
+
 (provide (all-defined-out)
          (except-out map-filter))
 
@@ -55,11 +64,13 @@
 
   (test-equal? "Add works." (add 2 "two" table) (hash 1 "one" 2 "two"))
 
-  (test-equal? "Change works." (change 1 (fn (_) "three") table) (hash 1 "three"))
+  (test-equal? "Change works." (change 1 "three" table) (hash 1 "three"))
 
   (test-true "Contains works." (contains-key 1 table))
 
   (test-eq? "Count works." (count table) 1)
+
+  (test-eq? "Get works." (get 1 table) "one")
 
   (test-equal? "Empty works." (empty) (hash))
 

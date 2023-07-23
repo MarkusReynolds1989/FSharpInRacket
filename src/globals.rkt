@@ -4,4 +4,7 @@
   (lambda args
     body ...))
 
-(provide fn)
+(define min-int -217483648)
+(define max-int 217483648)
+
+(provide fn max-int min-int)
