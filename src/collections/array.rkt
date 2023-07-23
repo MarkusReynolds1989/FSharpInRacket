@@ -41,6 +41,7 @@
 ; Applies the given function to each element of the array. Returns the new array
 ; comprised of the results x for each element where the function returns Some(x).
 
+; TODO: Revisit this, it should work differently, this is windowed instead.
 ; Divides the input array into chunks of size at most chunk-size.
 (define (chunk-by-size chunk-size input)
   (let loop ([index 0] [chunk-size chunk-size] [input input])
@@ -322,7 +323,7 @@
   (for ([index (in-range 0 (length array-one))])
     (action index (get array-one index) (get array-two index))))
 
-(define (last array)
+(define (tail array)
   (get array (- (length array) 1)))
 
 (define (length array)
@@ -492,6 +493,14 @@
 (define (skip-while predciate array)
   0)
 
+; Sorts the elements of the array, returning a new array.
+(define (sort input)
+  (vector-sort input <))
+
+; Sorts the elements of the array, using the given projection for the keys returning a new array.
+(define (sort-by projection input)
+  0)
+
 ; Splits an array into two arrays, at the given index.
 (define (split-at index input)
   (list (take index input) (~>> (skip index input) (take (- (length input) index)))))
@@ -499,11 +508,19 @@
 (define (sum array)
   (fold (fn (acc item) (+ acc item)) 0 array))
 
-;(define (sort array)
-;  (vector-sort array))
-
 (define (take size input)
   (vector-take input size))
+
+(define (windowed window-size input)
+  (let loop ([index 0] [window-size window-size] [input input])
+    (cond
+      [(= index (- (+ (length input) 1) window-size)) #()]
+      [(append (vector (~>> (skip index input) (take window-size)))
+               (loop (+ index 1) window-size input))])))
+
+; Combines the two arrays into an array of pairs. The two parrays must have equal lengths.
+(define (zip array-one array-two)
+  0)
 
 (provide (all-defined-out))
 
@@ -702,6 +719,8 @@
                (scan-back (fn (state x) (+ state x)) 0 (vector 1 2 3 4))
                (vector 4 7 9 10))
 
+  (test-equal? "Sort works." (sort #(5 3 4 2 1)) #(1 2 3 4 5))
+
   (test-equal? "Initializing an array works correctly."
                (init 3
                      (fn (item) (add1 item)))
@@ -711,7 +730,7 @@
 
   (test-false "The array is not empty." (is-empty (vector 1)))
 
-  (test-eq? "The last item in the array is 4." (last (vector 1 2 3 4)) 4)
+  (test-eq? "The last item in the array is 4." (tail (vector 1 2 3 4)) 4)
 
   (test-equal? "Split-at works correctly." (split-at 2 (vector 1 2 3 4 5)) (list #(1 2) #(3 4 5)))
 
