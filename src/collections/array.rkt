@@ -1,12 +1,14 @@
-#lang racket/base
+#lang racket
 
 (require "../globals.rkt"
          (prefix-in Map. "map.rkt")
          (prefix-in List. "list.rkt")
          racket/vector
-         threading)
+         threading
+         scribble/srcdoc
+         (for-doc racke/base scribble/manual))
 
-; Returns a new array that contains all pairings of elements from the first and second arrays.
+; Returns a new array that contains all pairings of elements from the first and second array.
 (define (all-pairs array-one array-two)
 
   (define result (empty))
@@ -449,12 +451,46 @@
       [(< index 0) state]
       [(loop (- index 1) (reduction state (get input index)) reduction input)])))
 
+; TODO: remove-at
+
+; TODO: remove-many-at
+
+; Returns a new array with the elements in the reverse order.
+(define (rev input)
+  (let loop ([index (- (length input) 1)] [input input])
+    (cond
+      [(< index 0) #()]
+      [(append (vector (get input index)) (loop (- index 1) input))])))
+
+; Like fold, but returns the intermediary and final results.
+(define (scan folder state input)
+  (let loop ([index 0] [state state] [folder folder] [input input])
+    (cond
+      [(= index (length input)) #()]
+      [(append (vector (folder state (get input index)))
+               (loop (+ index 1) (folder state (get input index)) folder input))])))
+
+; Like fold-back, but returns bot the intermediary and final results.
+(define (scan-back folder state input)
+  (let loop ([index (- (length input) 1)] [state state] [folder folder] [input input])
+    (cond
+      [(< index 0) #()]
+      [(append (vector (folder state (get input index)))
+               (loop (- index 1) (folder state (get input index)) folder input))])))
+
 ; Sets an element of an array.
 (define (set array index value)
   (vector-set! array index value))
 
+; Builds a new array that contains the elements of the given array, excluding the first
+; n elements.
 (define (skip size array)
   (vector-drop array size))
+
+; Bypasses elements in an array while the given predicate returns True, and then
+; returns the remaining elements in a new array.
+(define (skip-while predciate array)
+  0)
 
 ; Splits an array into two arrays, at the given index.
 (define (split-at index input)
@@ -657,6 +693,14 @@
   (test-eq? "Reduce works." (reduce (fn (state x) (+ state x)) (vector 1 2 3 4)) 10)
 
   (test-eq? "Reduce-back works." (reduce-back (fn (state x) (+ state x)) (vector 1 2 3 4)) 10)
+
+  (test-equal? "Rev works." (rev (vector 1 2 3 4)) #(4 3 2 1))
+
+  (test-equal? "Scan works." (scan (fn (state x) (+ state x)) 0 (vector 1 2 3 4)) (vector 1 3 6 10))
+
+  (test-equal? "Scan-back works."
+               (scan-back (fn (state x) (+ state x)) 0 (vector 1 2 3 4))
+               (vector 4 7 9 10))
 
   (test-equal? "Initializing an array works correctly."
                (init 3
