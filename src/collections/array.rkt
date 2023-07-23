@@ -418,9 +418,36 @@
       [(append (vector (~>> (skip index input) (take chunk-size) (List.of-array)))
                (loop (+ index 1) chunk-size input))])))
 
+; TODO: Implement
 ; Splits teh collection into two collections, containing the elements for which the given
 ; predicate returns true and false respectively.
-(define (partition predicate input)0)
+; (define (partition predicate input)
+;  0)
+
+; Permute, not sure if I want to implement this.
+
+; Pick, not sure if I need it. No option type in untyped, may implement in typed version.
+
+; Applies a function to each element of the array, threading an accumulator
+; argument throught he computation. If the input function is f and the elements are
+; i0...iN then computers f(... (f i0 i1) ...) iN.
+(define (reduce reduction input)
+  (let loop ([index 1] [state (get input 0)] [reduction reduction] [input input])
+    (cond
+      [(= index (length input)) state]
+      [(loop (+ index 1) (reduction state (get input index)) reduction input)])))
+
+; Applies a function to each element of the array, starting from the end, threading
+; an accumulator argument through the computation. If the input function is f
+; and the elements are i0...iN then computes f i0 (...(f iN-1 iN)).
+(define (reduce-back reduction input)
+  (let loop ([index (- (length input) 2)]
+             [state (get input (- (length input) 1))]
+             [reduction reduction]
+             [input input])
+    (cond
+      [(< index 0) state]
+      [(loop (- index 1) (reduction state (get input index)) reduction input)])))
 
 ; Sets an element of an array.
 (define (set array index value)
@@ -626,6 +653,10 @@
   (test-equal? "Of-list works." (of-list (list 1 2 3 4)) #(1 2 3 4))
 
   (test-equal? "Pairwise works." (pairwise (vector 1 2 3 4)) #((1 2) (2 3) (3 4)))
+
+  (test-eq? "Reduce works." (reduce (fn (state x) (+ state x)) (vector 1 2 3 4)) 10)
+
+  (test-eq? "Reduce-back works." (reduce-back (fn (state x) (+ state x)) (vector 1 2 3 4)) 10)
 
   (test-equal? "Initializing an array works correctly."
                (init 3
